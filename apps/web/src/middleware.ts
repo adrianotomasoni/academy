@@ -7,6 +7,7 @@ const ROTAS_PROTEGIDAS = [
   "/consulta",
   "/academia",
   "/chat",
+  "/comunidade",
   "/seguradoras",
   "/financeiro",
   "/judicial",

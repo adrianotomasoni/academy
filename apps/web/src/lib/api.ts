@@ -7,6 +7,13 @@ function authHeaders(token?: string, json = false): Record<string, string> {
   return h;
 }
 
+/** Público: contagem de ações em curso (polo passivo) por esfera. Sem login. */
+export async function contarProcessos(cnpj: string) {
+  const r = await fetch(`${API_URL}/processos/${cnpj}`);
+  if (!r.ok) throw new Error("Erro ao consultar processos");
+  return r.json();
+}
+
 export async function consultarDossie(cnpj: string, token?: string) {
   const r = await fetch(`${API_URL}/dossie/${cnpj}`, { headers: authHeaders(token) });
   if (!r.ok) throw new Error("Erro ao consultar CNPJ");
