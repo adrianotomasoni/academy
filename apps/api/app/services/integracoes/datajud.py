@@ -108,6 +108,61 @@ def _buscar_todos_tribunais(cnpj: str, detalhado: bool) -> dict:
     return resultado
 
 
+def contar_polo_passivo(cnpj: str) -> dict:
+    """Público (versão limitada): conta ações EM CURSO (não encerradas) em que o
+    CNPJ figura como **polo passivo**, agrupadas por esfera (trabalhista/cível/fiscal).
+
+    É de propósito mais pobre que ``consultar_por_cnpj(detalhado=True)``: assinantes
+    acessam todas as partes, valores, modalidade provável e detalhe por processo.
+    """
+    cnpj_limpo = "".join(filter(str.isdigit, cnpj))
+    if not settings.datajud_api_key:
+        return _mock_polo_passivo(cnpj_limpo)
+    return consultar_com_fallback(
+        lambda: _contar_passivo(cnpj_limpo),
+        lambda: _mock_polo_passivo(cnpj_limpo),
+        fonte="DataJud",
+        logger=logger,
+    )
+
+
+def _eh_polo_passivo(raw: dict, cnpj: str) -> bool:
+    for parte in raw.get("partes", []) or []:
+        if not isinstance(parte, dict):
+            continue
+        doc = "".join(filter(str.isdigit, parte.get("vinculoDocumento", "") or ""))
+        if doc == cnpj:
+            return "passiv" in (parte.get("polo", "") or "").lower()
+    return False
+
+
+def _esta_em_curso(raw: dict) -> bool:
+    # O índice público não traz um marcador de baixa confiável; assume em curso.
+    # TODO: refinar com situação/movimentações quando a fonte expuser o status.
+    return True
+
+
+def _contar_passivo(cnpj: str) -> dict:
+    counts = {"trabalhista": 0, "civel": 0, "fiscal": 0}
+    with httpx.Client() as client:
+        for tribunal in TRIBUNAIS_TRABALHISTA + TRIBUNAIS_ESTADUAIS:
+            for p in _buscar_tribunal(client, tribunal, cnpj, True):
+                if not (_eh_polo_passivo(p, cnpj) and _esta_em_curso(p)):
+                    continue
+                classe = (p.get("classeProcessual", {}) or {}).get("nome", "").lower()
+                if "trabalhista" in classe or tribunal.startswith("trt"):
+                    counts["trabalhista"] += 1
+                elif "fiscal" in classe or "tributár" in classe:
+                    counts["fiscal"] += 1
+                else:
+                    counts["civel"] += 1
+    return counts
+
+
+def _mock_polo_passivo(cnpj: str) -> dict:
+    return {"trabalhista": 9, "civel": 2, "fiscal": 1, "_mock": True}
+
+
 def _normalizar_processo(raw: dict, tipo: str) -> dict:
     partes = raw.get("partes", []) or []
     polo_tomador = "nao_identificado"

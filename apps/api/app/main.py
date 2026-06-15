@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
-from app.routers import chat, dossie, analise, seguradoras, health
+from app.routers import chat, dossie, analise, seguradoras, health, processos
 
 settings = get_settings()
 
@@ -23,6 +23,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(chat.router)
 app.include_router(dossie.router)
+app.include_router(processos.router)
 app.include_router(analise.router)
 app.include_router(seguradoras.router)
 

@@ -9,6 +9,7 @@ import {
   LineChart,
   Gavel,
   FileSearch,
+  Users,
   LogOut,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
@@ -16,7 +17,9 @@ import { createClient } from "@/lib/supabase";
 const ITENS = [
   { href: "/consulta", label: "Consulta CNPJ", icon: Building2 },
   { href: "/academia", label: "Academia", icon: GraduationCap },
+  { href: "/modalidades", label: "Modalidades", icon: GraduationCap },
   { href: "/chat", label: "Chat IA", icon: MessageSquare },
+  { href: "/comunidade", label: "Comunidade", icon: Users },
   { href: "/seguradoras", label: "Seguradoras", icon: ShieldCheck },
   { href: "/financeiro", label: "Análise financeira", icon: LineChart },
   { href: "/judicial", label: "Pipeline judicial", icon: Gavel },
