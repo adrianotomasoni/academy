@@ -2,6 +2,7 @@
 import logging
 import httpx
 from app.core.config import get_settings
+from app.services.integracoes.base import consultar_com_fallback
 
 settings = get_settings()
 BASE_URL = "https://pncp.gov.br/api/pncp/v1"
@@ -14,14 +15,12 @@ PAGE_SIZE = 20
 def consultar_por_cnpj(cnpj: str, detalhado: bool = False) -> dict:
     """Consulta contratos públicos do fornecedor por CNPJ no PNCP."""
     cnpj_limpo = "".join(filter(str.isdigit, cnpj))
-    try:
-        return _buscar_contratos(cnpj_limpo, detalhado)
-    except httpx.HTTPError as exc:
-        logger.warning("PNCP indisponível (%s) — retornando mock", exc)
-        return _mock(cnpj_limpo, detalhado)
-    except Exception as exc:
-        logger.warning("Erro ao consultar PNCP: %s — retornando mock", exc)
-        return _mock(cnpj_limpo, detalhado)
+    return consultar_com_fallback(
+        lambda: _buscar_contratos(cnpj_limpo, detalhado),
+        lambda: _mock(cnpj_limpo, detalhado),
+        fonte="PNCP",
+        logger=logger,
+    )
 
 
 def _buscar_contratos(cnpj: str, detalhado: bool) -> dict:
