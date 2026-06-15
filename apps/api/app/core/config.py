@@ -32,11 +32,6 @@ class Settings(BaseSettings):
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
 
-    # AWS (OCR via Textract) — opcional
-    aws_access_key_id: str = ""
-    aws_secret_access_key: str = ""
-    aws_region: str = "sa-east-1"
-
     # Limites de plano
     free_chat_limit: int = 10
     free_analise_limit: int = 3

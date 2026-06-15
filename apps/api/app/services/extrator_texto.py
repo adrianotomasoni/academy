@@ -1,9 +1,21 @@
 """
-Extração de texto de PDF e Word, com OCR para PDFs escaneados.
-Dependências: pymupdf (fitz), python-docx, boto3 (Textract opcional).
+Extração de texto de PDF e Word, com OCR local via Tesseract para PDFs escaneados.
+Dependências: pymupdf (fitz), python-docx, pytesseract, pdf2image, Pillow.
+Tesseract deve estar instalado no sistema (apt: tesseract-ocr tesseract-ocr-por).
 """
+import logging
 import fitz  # PyMuPDF
 from docx import Document as DocxDocument
+
+logger = logging.getLogger(__name__)
+
+try:
+    import pytesseract
+    from PIL import Image
+    import io
+    _TESSERACT_DISPONIVEL = True
+except ImportError:
+    _TESSERACT_DISPONIVEL = False
 
 
 def extrair_texto(arquivo_path: str, arquivo_tipo: str) -> tuple[str, bool, int]:
@@ -26,9 +38,9 @@ def _extrair_pdf(path: str) -> tuple[str, bool, int]:
     for page in doc:
         txt = page.get_text().strip()
         if len(txt) < 50:
-            # Página provavelmente escaneada -> OCR
             txt = _ocr_pagina(page)
-            usou_ocr = True
+            if txt:
+                usou_ocr = True
         partes.append(txt)
 
     doc.close()
@@ -36,15 +48,17 @@ def _extrair_pdf(path: str) -> tuple[str, bool, int]:
 
 
 def _ocr_pagina(page) -> str:
-    """
-    OCR de uma página. Implementação placeholder.
-    Em produção: renderizar a página como imagem e enviar ao AWS Textract
-    ou Google Document AI. Ver docs/04-ocr-setup.md.
-    """
-    # pix = page.get_pixmap(dpi=200)
-    # img_bytes = pix.tobytes("png")
-    # return textract_detect(img_bytes)
-    return ""  # TODO: integrar Textract
+    """OCR local via Tesseract. Requer tesseract-ocr instalado no sistema."""
+    if not _TESSERACT_DISPONIVEL:
+        logger.warning("pytesseract não instalado — página escaneada ignorada")
+        return ""
+    try:
+        pix = page.get_pixmap(dpi=200)
+        img = Image.open(io.BytesIO(pix.tobytes("png")))
+        return pytesseract.image_to_string(img, lang="por+eng")
+    except Exception as exc:
+        logger.warning("OCR falhou na página: %s", exc)
+        return ""
 
 
 def _extrair_docx(path: str) -> str:
