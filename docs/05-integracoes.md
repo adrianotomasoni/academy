@@ -2,18 +2,20 @@
 
 Guia de configuração de cada API externa. Todas têm modo mock — sem credenciais, retornam dados de exemplo para desenvolvimento.
 
-## APIBrasil — Consulta CNPJ
+## Consulta CNPJ (BrasilAPI)
 
-1. Crie conta em [apibrasil.com.br](https://apibrasil.com.br).
-2. Assine o plano que inclui o módulo **Dados CNPJ**.
-3. Pegue o **Bearer Token** e o **Device Token** no painel.
-4. No `.env` do backend:
+Implementado em `apps/api/app/services/integracoes/apibrasil.py`. Por padrão usa a
+**BrasilAPI pública** (`https://brasilapi.com.br/api/cnpj/v1/{cnpj}`), que **não exige
+credenciais** — funciona out-of-the-box. Em qualquer indisponibilidade, cai num mock.
+
+1. (Opcional) Para um provedor pago alternativo (ex.: APIBrasil), preencha no `.env`:
    ```
    APIBRASIL_TOKEN=seu_bearer_token
    APIBRASIL_DEVICE_TOKEN=seu_device_token
    ```
-5. Implementação: `apps/api/app/services/integracoes/apibrasil.py`.
-6. **Cache obrigatório**: salve o resultado em `tomadores.dados_rfb_raw` com `dados_rfb_em`. Reutilize por 30 dias para não pagar consultas repetidas.
+   Os tokens já são carregados em `config.py`, prontos para um provedor alternativo.
+2. **Cache recomendado**: salve o resultado em `tomadores.dados_rfb_raw` com `dados_rfb_em`
+   e reutilize por ~30 dias, evitando consultas repetidas e respeitando o rate limit público.
 
 ## DataJud — Processos Judiciais (CNJ)
 
@@ -100,7 +102,7 @@ Necessário apenas para PDFs escaneados (imagem de texto).
 | ANTHROPIC_API_KEY | Claude | Chat + análise de contratos |
 | OPENAI_API_KEY | OpenAI | RAG (embeddings) |
 | SUPABASE_* | Supabase | Tudo |
-| APIBRASIL_* | APIBrasil | Dossiê CNPJ |
+| APIBRASIL_* | BrasilAPI/APIBrasil | Opcional (BrasilAPI pública dispensa token) |
 | DATAJUD_API_KEY | CNJ | Processos judiciais |
 | ESCAVADOR_TOKEN | Escavador | Monitoramento / pipeline |
 | STRIPE_* | Stripe | Planos pagos |

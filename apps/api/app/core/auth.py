@@ -45,5 +45,5 @@ def checar_limite_chat(user: dict):
 def checar_limite_analise(user: dict):
     if eh_pro(user):
         return
-    # Implementar contagem mensal de análises no banco
-    pass
+    if user.get("analises_mes", 0) >= settings.free_analise_limit:
+        raise HTTPException(402, "Limite de análises do plano gratuito atingido. Faça upgrade para o Pro.")

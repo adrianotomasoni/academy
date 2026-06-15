@@ -9,6 +9,7 @@ Tribunais incluídos: TRT 1-24 (trabalhista) + maiores TJs estaduais (cível/fis
 import logging
 import httpx
 from app.core.config import get_settings
+from app.services.integracoes.base import consultar_com_fallback
 
 settings = get_settings()
 BASE_URL = "https://api-publica.datajud.cnj.jus.br"
@@ -33,11 +34,12 @@ def consultar_por_cnpj(cnpj: str, detalhado: bool = False) -> dict:
         return _mock(cnpj, detalhado)
 
     cnpj_limpo = "".join(filter(str.isdigit, cnpj))
-    try:
-        return _buscar_todos_tribunais(cnpj_limpo, detalhado)
-    except Exception as exc:
-        logger.warning("DataJud indisponível (%s) — retornando mock", exc)
-        return _mock(cnpj_limpo, detalhado)
+    return consultar_com_fallback(
+        lambda: _buscar_todos_tribunais(cnpj_limpo, detalhado),
+        lambda: _mock(cnpj_limpo, detalhado),
+        fonte="DataJud",
+        logger=logger,
+    )
 
 
 def _buscar_tribunal(client: httpx.Client, tribunal: str, cnpj: str, detalhado: bool) -> list[dict]:

@@ -7,6 +7,7 @@ Custo: cobrado por crédito — acionar só quando há nova movimentação relev
 import logging
 import httpx
 from app.core.config import get_settings
+from app.services.integracoes.base import consultar_com_fallback
 
 settings = get_settings()
 BASE_URL = "https://api.escavador.com/api/v2"
@@ -23,11 +24,12 @@ def consultar_processos_por_cnpj(cnpj: str) -> dict:
     if not settings.escavador_token:
         return _mock_processos(cnpj)
     cnpj_limpo = "".join(filter(str.isdigit, cnpj))
-    try:
-        return _buscar_envolvido(cnpj_limpo)
-    except Exception as exc:
-        logger.warning("Escavador indisponível (%s) — retornando mock", exc)
-        return _mock_processos(cnpj_limpo)
+    return consultar_com_fallback(
+        lambda: _buscar_envolvido(cnpj_limpo),
+        lambda: _mock_processos(cnpj_limpo),
+        fonte="Escavador",
+        logger=logger,
+    )
 
 
 def consultar_movimentacoes(processo_id: int) -> dict:
@@ -36,11 +38,12 @@ def consultar_movimentacoes(processo_id: int) -> dict:
     """
     if not settings.escavador_token:
         return _mock_movimentacoes(str(processo_id))
-    try:
-        return _buscar_movimentacoes(processo_id)
-    except Exception as exc:
-        logger.warning("Escavador movimentações falhou (%s) — retornando mock", exc)
-        return _mock_movimentacoes(str(processo_id))
+    return consultar_com_fallback(
+        lambda: _buscar_movimentacoes(processo_id),
+        lambda: _mock_movimentacoes(str(processo_id)),
+        fonte="Escavador/movimentações",
+        logger=logger,
+    )
 
 
 def criar_monitoramento(processo_id: int) -> dict:
