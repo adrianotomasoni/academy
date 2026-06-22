@@ -2,5 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { --navy: #0D1E3A; --teal: #00A693; }
-body { color: #1A1A2E; background: #fff; }
+:root {
+  --navy: #0d1e3a;
+  --teal: #00a693;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: #e8edf6;
+  background: #0a1730;
+  font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Componentes utilitários da marca ---------- */
+@layer components {
+  .container-tr {
+    @apply max-w-6xl mx-auto px-6;
+  }
+
+  .eyebrow {
+    @apply text-teal font-semibold tracking-[0.18em] text-xs uppercase;
+  }
+
+  .card-surface {
+    @apply bg-white/[0.04] border border-white/10 rounded-2xl backdrop-blur-sm transition;
+  }
+  .card-hover {
+    @apply hover:border-teal/40 hover:bg-white/[0.06] hover:-translate-y-0.5 hover:shadow-card;
+  }
+}
+
+/* ---------- Renderização do conteúdo da base de conhecimento ---------- */
+.kb {
+  @apply text-[15px] leading-relaxed text-gray-200;
+}
+.kb h2,
+.kb h3 {
+  @apply font-display font-semibold text-white;
+}
+.kb h2 {
+  @apply text-lg mt-6 mb-2;
+}
+.kb h3 {
+  @apply text-base mt-5 mb-2;
+}
+.kb p {
+  @apply my-3;
+}
+.kb strong {
+  @apply text-white font-semibold;
+}
+.kb a {
+  @apply text-teal underline underline-offset-2;
+}
+.kb ul {
+  @apply my-3 space-y-1.5 list-none pl-0;
+}
+.kb ol {
+  @apply my-3 space-y-1.5 list-decimal pl-5;
+}
+.kb ul > li {
+  @apply relative pl-5;
+}
+.kb ul > li::before {
+  content: "";
+  @apply absolute left-0 top-[0.6em] w-1.5 h-1.5 rounded-full bg-teal;
+}
+.kb ul > li input[type="checkbox"] {
+  @apply mr-2 accent-teal;
+}
+.kb ul > li:has(input[type="checkbox"])::before {
+  content: none;
+}
+.kb blockquote {
+  @apply border-l-2 border-teal/60 pl-4 my-4 text-gray-300 italic;
+}
+.kb table {
+  @apply w-full my-4 text-sm border-collapse;
+}
+.kb th,
+.kb td {
+  @apply border border-white/10 px-3 py-2 text-left;
+}
+.kb th {
+  @apply bg-white/5 font-semibold text-white;
+}
+.kb hr {
+  @apply border-white/10 my-6;
+}
+.kb code {
+  @apply bg-white/10 rounded px-1.5 py-0.5 text-teal-light text-[0.85em];
+}
