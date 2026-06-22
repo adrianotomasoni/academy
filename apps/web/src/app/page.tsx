@@ -2,10 +2,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Scale,
-  Gavel,
-  Layers,
-  Landmark,
   PlayCircle,
   AlertTriangle,
   HelpCircle,
@@ -16,40 +12,21 @@ import {
   Plus,
   X,
   ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import { contarProcessos } from "@/lib/api";
+import { Button } from "@/components/ui/Button";
+import Logo from "@/components/ui/Logo";
+import { GRUPO_UI } from "@/components/ui/grupo";
+import { GRUPOS, ORDEM_GRUPOS, modalidadesPorGrupo } from "@/lib/modalidades";
+import { cn } from "@/lib/cn";
 
-const GRUPOS = [
-  {
-    icon: Scale,
-    nome: "Tradicionais",
-    desc: "Licitações e contratos de obras, fornecimento e serviços.",
-    itens: ["Licitação (bid)", "Execução de contrato", "Adiantamento", "Retenção de pagamento", "Manutenção corretiva"],
-  },
-  {
-    icon: Gavel,
-    nome: "Judiciais",
-    desc: "Substituição de depósitos e garantias em processos.",
-    itens: ["Depósito recursal trabalhista", "Judicial cível", "Judicial fiscal", "Judicial trabalhista"],
-  },
-  {
-    icon: Layers,
-    nome: "Estruturadas",
-    desc: "Operações complexas e setoriais sob medida.",
-    itens: ["Concessões públicas", "Completion bond", "Energia", "Créditos tributários", "Aduaneiras", "Fiança locatícia"],
-  },
-  {
-    icon: Landmark,
-    nome: "Financeiras",
-    desc: "Garantias ligadas a estruturas de capital e crédito.",
-    itens: ["CRA / CRI / debêntures", "Escrow accounts", "M&A", "Confissão de dívida", "Import/export", "FINEP"],
-  },
-];
+const grupos = modalidadesPorGrupo();
 
 const EM_CADA_PAGINA = [
-  { icon: PlayCircle, t: "Vídeos", d: "Aulas curtas explicando a modalidade do zero." },
-  { icon: AlertTriangle, t: "Cases de sinistro", d: "O que deu errado na prática e como se proteger." },
-  { icon: HelpCircle, t: "Perguntas frequentes", d: "As dúvidas reais de corretores, empresas e advogados." },
+  { icon: PlayCircle, t: "Vídeo-aula", d: "Aulas curtas explicando a modalidade do zero." },
+  { icon: HelpCircle, t: "Conteúdo técnico", d: "Definição, uso, documentação e legislação aplicável." },
+  { icon: AlertTriangle, t: "Cases de sinistro", d: "O que deu errado na prática e como se proteger.", pro: true },
   { icon: MessageSquare, t: "Chat com o agente", d: "Pergunte sobre a modalidade (requer conta).", pro: true },
 ];
 
@@ -59,14 +36,7 @@ const PRO = [
   { icon: Target, t: "Dossiê de oportunidades", d: "Garantias judiciais mapeadas a partir do polo passivo do tomador." },
 ];
 
-type Resultado = {
-  cnpj: string;
-  razao?: string;
-  trabalhista: number;
-  civel: number;
-  fiscal: number;
-  erro?: string;
-};
+type Resultado = { cnpj: string; razao?: string; trabalhista: number; civel: number; fiscal: number; erro?: string };
 
 export default function Home() {
   const [cnpjs, setCnpjs] = useState<string[]>([""]);
@@ -74,7 +44,8 @@ export default function Home() {
   const [resultados, setResultados] = useState<Resultado[] | null>(null);
 
   const formatar = (v: string) =>
-    v.replace(/\D/g, "")
+    v
+      .replace(/\D/g, "")
       .replace(/^(\d{2})(\d)/, "$1.$2")
       .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
       .replace(/\.(\d{3})(\d)/, ".$1/$2")
@@ -94,75 +65,69 @@ export default function Home() {
       limpos.map(async (cnpj) => {
         try {
           const d = await contarProcessos(cnpj);
-          return {
-            cnpj,
-            razao: d.razao_social,
-            trabalhista: d.trabalhista ?? 0,
-            civel: d.civel ?? 0,
-            fiscal: d.fiscal ?? 0,
-          };
+          return { cnpj, razao: d.razao_social, trabalhista: d.trabalhista ?? 0, civel: d.civel ?? 0, fiscal: d.fiscal ?? 0 };
         } catch (e: any) {
           return { cnpj, trabalhista: 0, civel: 0, fiscal: 0, erro: e.message };
         }
-      })
+      }),
     );
     setResultados(out);
     setLoading(false);
   }
 
   return (
-    <main className="min-h-screen bg-navy text-white">
-      <header className="sticky top-0 z-20 bg-navy/90 backdrop-blur border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="font-bold">Traderisk <span className="text-teal">Academy</span></span>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-gray-300">
+    <main className="min-h-screen bg-navy-900 text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-navy-900/80 backdrop-blur-md border-b border-white/5">
+        <div className="container-tr py-3.5 flex items-center justify-between">
+          <Logo />
+          <nav className="hidden md:flex items-center gap-7 text-sm text-gray-300">
             <a href="#modalidades" className="hover:text-teal transition">Modalidades</a>
             <a href="#ferramenta" className="hover:text-teal transition">Risco judicial</a>
-            <a href="#conta" className="hover:text-teal transition">Versão completa</a>
+            <a href="#academia" className="hover:text-teal transition">Como funciona</a>
           </nav>
           <div className="flex items-center gap-2 text-sm">
-            <Link href="/login" className="px-4 py-2 hover:text-teal transition">Entrar</Link>
-            <Link href="/cadastro" className="px-4 py-2 bg-teal hover:bg-teal-light text-navy font-bold rounded-lg transition">
-              Criar conta grátis
-            </Link>
+            <Button href="/login" variant="ghost" size="sm">Entrar</Button>
+            <Button href="/cadastro" size="sm">Criar conta grátis</Button>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="bg-gradient-to-b from-navy to-navy-light">
-        <div className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
-          <p className="text-teal font-semibold mb-3">A ESCOLA DO SEGURO GARANTIA</p>
-          <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
-            Domine todas as modalidades de Seguro Garantia
+      <section className="bg-hero-radial">
+        <div className="max-w-3xl mx-auto px-6 pt-24 pb-20 text-center">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold text-teal bg-teal/10 border border-teal/20 rounded-full px-3 py-1.5 mb-6">
+            <ShieldCheck size={14} /> A escola do Seguro Garantia
+          </span>
+          <h1 className="font-display text-4xl md:text-6xl font-bold mb-6 leading-[1.05]">
+            Domine todas as modalidades de <span className="text-teal">Seguro Garantia</span>
           </h1>
-          <p className="text-lg text-gray-300 mb-9">
+          <p className="text-lg text-gray-300 mb-9 max-w-2xl mx-auto">
             Conteúdo técnico, vídeos e cases reais de sinistro para cada modalidade — das
-            tradicionais às judiciais, estruturadas e financeiras. Aprenda, consulte e
-            analise tomadores em um só lugar.
+            tradicionais às judiciais, estruturadas e financeiras. Aprenda, consulte e analise
+            tomadores em um só lugar.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Link href="/modalidades" className="px-7 py-3.5 bg-teal hover:bg-teal-light text-navy font-bold rounded-lg transition">
-              Explorar modalidades
-            </Link>
-            <a href="#ferramenta" className="px-7 py-3.5 border border-white/20 hover:border-teal rounded-lg font-semibold transition">
-              Verificar risco judicial grátis
-            </a>
+            <Button href="/modalidades" size="lg">Explorar modalidades</Button>
+            <Button href="#ferramenta" variant="secondary" size="lg">Verificar risco judicial grátis</Button>
           </div>
         </div>
       </section>
 
       {/* Ferramenta pública — risco judicial */}
-      <section id="ferramenta" className="max-w-4xl mx-auto px-6 py-16">
+      <section id="ferramenta" className="max-w-4xl mx-auto px-6 py-20">
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">Quanto risco judicial este tomador carrega?</h2>
+          <p className="eyebrow mb-2">Ferramenta gratuita</p>
+          <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+            Quanto risco judicial este tomador carrega?
+          </h2>
           <p className="text-gray-300">
-            Sem cadastro, compare até <b>2 CNPJs</b>. Mostramos o número de ações <b>em curso</b> (não
-            encerradas) em que a empresa é <b>polo passivo</b>, nas esferas trabalhista, cível e fiscal.
+            Sem cadastro, compare até <b>2 CNPJs</b>. Mostramos o número de ações <b>em curso</b> em
+            que a empresa é <b>polo passivo</b>, nas esferas trabalhista, cível e fiscal.
           </p>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="card-surface p-6">
           <div className="space-y-3">
             {cnpjs.map((c, i) => (
               <div key={i} className="flex gap-2">
@@ -171,13 +136,13 @@ export default function Home() {
                   onChange={(e) => setCnpj(i, e.target.value)}
                   placeholder={`CNPJ ${i + 1} — 00.000.000/0000-00`}
                   onKeyDown={(e) => e.key === "Enter" && analisar()}
-                  className="flex-1 px-4 py-3 rounded-lg text-navy font-medium outline-none"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white text-navy-900 font-medium outline-none focus:ring-2 focus:ring-teal"
                 />
                 {cnpjs.length > 1 && (
                   <button
                     onClick={() => setCnpjs((arr) => arr.filter((_, j) => j !== i))}
                     aria-label="Remover CNPJ"
-                    className="px-3 rounded-lg border border-white/15 hover:bg-white/5"
+                    className="px-3 rounded-xl border border-white/15 hover:bg-white/5"
                   >
                     <X size={16} />
                   </button>
@@ -195,31 +160,27 @@ export default function Home() {
                 <Plus size={16} /> Adicionar 2º CNPJ
               </button>
             )}
-            <button
-              onClick={analisar}
-              disabled={loading}
-              className="ml-auto px-7 py-3 bg-teal hover:bg-teal-light text-navy rounded-lg font-bold transition disabled:opacity-50"
-            >
+            <Button onClick={analisar} disabled={loading} size="md" className="ml-auto">
               {loading ? "Analisando..." : "Analisar processos"}
-            </button>
+            </Button>
           </div>
         </div>
 
         {resultados && (
-          <div className={`grid gap-4 mt-6 ${resultados.length > 1 ? "md:grid-cols-2" : ""}`}>
+          <div className={cn("grid gap-4 mt-6", resultados.length > 1 && "md:grid-cols-2")}>
             {resultados.map((r) => {
               const total = r.trabalhista + r.civel + r.fiscal;
               return (
-                <div key={r.cnpj} className="bg-white/10 border border-white/10 rounded-xl p-6">
+                <div key={r.cnpj} className="card-surface p-6">
                   {r.erro ? (
                     <p className="text-red-300 text-sm">Não foi possível consultar {r.cnpj}.</p>
                   ) : (
                     <>
                       <p className="text-xs text-gray-400">{r.cnpj}</p>
-                      <p className="font-bold mb-4">{r.razao || "Tomador"}</p>
+                      <p className="font-display font-bold mb-4">{r.razao || "Tomador"}</p>
                       <div className="grid grid-cols-3 gap-2 text-center mb-3">
                         {[["Trabalhista", r.trabalhista], ["Cível", r.civel], ["Fiscal", r.fiscal]].map(([l, n]) => (
-                          <div key={l as string} className="bg-white/5 rounded-lg py-3">
+                          <div key={l as string} className="bg-white/5 rounded-xl py-3">
                             <p className="text-2xl font-bold text-teal">{n as number}</p>
                             <p className="text-xs text-gray-300 mt-0.5">{l}</p>
                           </div>
@@ -249,82 +210,99 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Modalidades */}
-      <section id="modalidades" className="bg-navy-light/40 border-y border-white/5">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">Uma página dedicada para cada modalidade</h2>
-            <p className="text-gray-300">Vídeos, cases de sinistro e perguntas frequentes — organizados por grupo.</p>
+      {/* Modalidades por grupo (cards) */}
+      <section id="modalidades" className="bg-navy-800/40 border-y border-white/5">
+        <div className="container-tr py-20">
+          <div className="text-center mb-12">
+            <p className="eyebrow mb-2">Biblioteca</p>
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+              Uma página dedicada para cada modalidade
+            </h2>
+            <p className="text-gray-300">Vídeo, conteúdo técnico, cases de sinistro e arquivos — organizados por grupo.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {GRUPOS.map(({ icon: Icon, nome, desc, itens }) => (
-              <Link href="/modalidades" key={nome} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col hover:border-teal/50 transition">
-                <Icon className="text-teal mb-3" size={26} />
-                <p className="font-semibold mb-1">{nome}</p>
-                <p className="text-sm text-gray-300 mb-4">{desc}</p>
-                <ul className="space-y-1.5 mt-auto">
-                  {itens.map((it) => (
-                    <li key={it} className="text-sm text-gray-200 flex items-start gap-2">
-                      <span className="text-teal mt-1.5 w-1 h-1 rounded-full bg-teal shrink-0" />
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-              </Link>
-            ))}
+            {ORDEM_GRUPOS.map((g) => {
+              const ui = GRUPO_UI[GRUPOS[g].accent];
+              const Icon = ui.Icon;
+              return (
+                <Link
+                  key={g}
+                  href="/modalidades"
+                  className="group card-surface card-hover p-6 flex flex-col"
+                >
+                  <span className={cn("grid place-items-center w-12 h-12 rounded-xl mb-4", ui.bgSoft, ui.text)}>
+                    <Icon size={24} />
+                  </span>
+                  <p className="font-display font-semibold mb-1">{GRUPOS[g].label}</p>
+                  <p className="text-sm text-gray-400 mb-4">{GRUPOS[g].desc}</p>
+                  <ul className="space-y-1.5 mt-auto">
+                    {grupos[g].slice(0, 4).map((m) => (
+                      <li key={m.slug} className="text-sm text-gray-300 flex items-start gap-2">
+                        <span className={cn("mt-1.5 w-1 h-1 rounded-full shrink-0", ui.dot)} />
+                        {m.nome}
+                      </li>
+                    ))}
+                    {grupos[g].length > 4 && (
+                      <li className={cn("text-sm font-medium pt-1", ui.text)}>+{grupos[g].length - 4} modalidades</li>
+                    )}
+                  </ul>
+                </Link>
+              );
+            })}
           </div>
-          <div className="text-center mt-8">
-            <Link href="/modalidades" className="text-teal font-semibold hover:text-teal-light">
-              Ver todas as modalidades →
-            </Link>
+          <div className="text-center mt-10">
+            <Button href="/modalidades" variant="secondary">Ver todas as modalidades</Button>
           </div>
         </div>
       </section>
 
       {/* O que tem em cada página */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">O que você encontra em cada modalidade</h2>
+      <section id="academia" className="container-tr py-20">
+        <div className="text-center mb-12">
+          <p className="eyebrow mb-2">Como funciona</p>
+          <h2 className="font-display text-2xl md:text-3xl font-bold">O que você encontra em cada modalidade</h2>
+        </div>
         <div className="grid md:grid-cols-4 gap-4">
           {EM_CADA_PAGINA.map(({ icon: Icon, t, d, pro }) => (
-            <div key={t} className="bg-white/5 border border-white/10 rounded-xl p-5 text-center">
+            <div key={t} className="card-surface p-6 text-center">
               <Icon className="text-teal mx-auto mb-3" size={26} />
-              <p className="font-semibold mb-1">
-                {t} {pro && <span className="text-xs align-middle bg-teal/20 text-teal px-2 py-0.5 rounded-full">conta</span>}
+              <p className="font-display font-semibold mb-1">
+                {t}{" "}
+                {pro && <span className="text-[10px] align-middle bg-teal/20 text-teal px-2 py-0.5 rounded-full">conta</span>}
               </p>
-              <p className="text-sm text-gray-300">{d}</p>
+              <p className="text-sm text-gray-400">{d}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Versão com conta */}
-      <section id="conta" className="bg-navy-light/40 border-y border-white/5">
-        <div className="max-w-5xl mx-auto px-6 py-16">
-          <div className="text-center mb-10">
-            <p className="text-teal font-semibold mb-2">COM A SUA CONTA</p>
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">Da teoria à operação</h2>
+      <section className="bg-navy-800/40 border-y border-white/5">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <div className="text-center mb-12">
+            <p className="eyebrow mb-2">Com a sua conta</p>
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">Da teoria à operação</h2>
             <p className="text-gray-300">Ferramentas que transformam conhecimento em negócio fechado.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {PRO.map(({ icon: Icon, t, d }) => (
-              <div key={t} className="bg-white/5 border border-white/10 rounded-xl p-6">
+              <div key={t} className="card-surface p-6">
                 <Icon className="text-teal mb-3" size={26} />
-                <p className="font-semibold mb-1">{t}</p>
-                <p className="text-sm text-gray-300">{d}</p>
+                <p className="font-display font-semibold mb-1">{t}</p>
+                <p className="text-sm text-gray-400">{d}</p>
               </div>
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link href="/cadastro" className="inline-block px-8 py-4 bg-teal hover:bg-teal-light text-navy font-bold rounded-lg transition">
-              Criar conta grátis
-            </Link>
+            <Button href="/cadastro" size="lg">Criar conta grátis</Button>
             <p className="text-sm text-gray-400 mt-3">Sem cartão. Comece pelo conteúdo, evolua para as ferramentas.</p>
           </div>
         </div>
       </section>
 
-      <footer className="max-w-6xl mx-auto px-6 py-10 text-sm text-gray-400 flex flex-wrap items-center justify-between gap-3">
-        <span>Traderisk Academy — inteligência em Seguro Garantia.</span>
+      <footer className="container-tr py-10 text-sm text-gray-400 flex flex-wrap items-center justify-between gap-3">
+        <Logo />
+        <span className="text-gray-500">Inteligência em Seguro Garantia.</span>
         <div className="flex gap-5">
           <Link href="/login" className="hover:text-teal">Entrar</Link>
           <Link href="/cadastro" className="hover:text-teal">Criar conta</Link>

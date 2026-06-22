@@ -1,11 +1,35 @@
 export type Grupo = "tradicionais" | "judiciais" | "estruturadas" | "financeiras";
 
-export const GRUPOS: Record<Grupo, { label: string; desc: string }> = {
-  tradicionais: { label: "Tradicionais", desc: "Licitações e contratos de obras, fornecimento e serviços." },
-  judiciais: { label: "Judiciais", desc: "Substituição de depósitos e garantias em processos." },
-  estruturadas: { label: "Estruturadas", desc: "Operações complexas e setoriais sob medida." },
-  financeiras: { label: "Financeiras", desc: "Garantias ligadas a estruturas de capital e crédito." },
+/** Chave de acento (cor/ícone) resolvida na UI — ver components/ui/grupo.tsx */
+export type GrupoAccent = "tradicional" | "judicial" | "estruturada" | "financeira";
+
+export const GRUPOS: Record<
+  Grupo,
+  { label: string; desc: string; accent: GrupoAccent }
+> = {
+  tradicionais: {
+    label: "Tradicionais",
+    desc: "Licitações e contratos de obras, fornecimento e serviços.",
+    accent: "tradicional",
+  },
+  judiciais: {
+    label: "Judiciais",
+    desc: "Substituição de depósitos e garantias em processos.",
+    accent: "judicial",
+  },
+  estruturadas: {
+    label: "Estruturadas",
+    desc: "Operações complexas e setoriais sob medida.",
+    accent: "estruturada",
+  },
+  financeiras: {
+    label: "Financeiras",
+    desc: "Garantias ligadas a estruturas de capital e crédito.",
+    accent: "financeira",
+  },
 };
+
+export const ORDEM_GRUPOS: Grupo[] = ["tradicionais", "judiciais", "estruturadas", "financeiras"];
 
 export type Modalidade = {
   slug: string;
@@ -46,6 +70,12 @@ export const MODALIDADES: Modalidade[] = [
   { slug: "finep", nome: "FINEP", grupo: "financeiras", resumo: "Garante operações de financiamento à inovação junto à FINEP." },
   { slug: "passivos-previdenciarios", nome: "Passivos previdenciários", grupo: "financeiras", resumo: "Garante parcelamentos e discussões de passivos previdenciários." },
   { slug: "quebra-de-covenants", nome: "Quebra de covenants", grupo: "financeiras", resumo: "Garantia acionada em descumprimento de cláusulas financeiras de contratos de crédito." },
+  { slug: "arbitragem", nome: "Arbitragem", grupo: "financeiras", resumo: "Garante valores discutidos em procedimentos arbitrais, sem imobilizar caixa." },
+  { slug: "bts-sale-leaseback", nome: "BTS / Sale & Leaseback", grupo: "financeiras", resumo: "Garante os pagamentos de longo prazo em built-to-suit e sale & leaseback." },
+  { slug: "contratos-de-exclusividade", nome: "Contratos de exclusividade", grupo: "financeiras", resumo: "Garante compromissos financeiros assumidos em acordos de exclusividade." },
+  { slug: "pagamento-a-fornecedores", nome: "Pagamento a fornecedores", grupo: "financeiras", resumo: "Dá segurança aos fornecedores de que serão pagos pelo que forneceram." },
+  { slug: "pagamento-futuro", nome: "Pagamento futuro", grupo: "financeiras", resumo: "Garante o cumprimento de obrigações pecuniárias combinadas para o futuro." },
+  { slug: "pagamento-minimo-franquia", nome: "Pagamento mínimo (franquia)", grupo: "financeiras", resumo: "Garante o valor mínimo acordado em contratos de franquia ou de balcão." },
 ];
 
 export function getModalidade(slug: string): Modalidade | undefined {
@@ -56,30 +86,4 @@ export function modalidadesPorGrupo(): Record<Grupo, Modalidade[]> {
   const out = { tradicionais: [], judiciais: [], estruturadas: [], financeiras: [] } as Record<Grupo, Modalidade[]>;
   for (const m of MODALIDADES) out[m.grupo].push(m);
   return out;
-}
-
-/** FAQ inicial por grupo (conteúdo livre). O acervo completo vem da base de conhecimento. */
-export function faqDaModalidade(m: Modalidade): { q: string; a: string }[] {
-  const base = [
-    { q: `O que é a garantia de ${m.nome.toLowerCase()}?`, a: m.resumo },
-  ];
-  const porGrupo: Record<Grupo, { q: string; a: string }[]> = {
-    tradicionais: [
-      { q: "Qual o percentual de garantia exigido?", a: "Em geral entre 5% e 30% do valor do contrato, conforme o edital e a Lei 14.133/2021." },
-      { q: "A apólice vale como caução em licitação?", a: "Sim. O Seguro Garantia é aceito como modalidade de garantia em licitações públicas." },
-    ],
-    judiciais: [
-      { q: "A apólice substitui o depósito em dinheiro?", a: "Sim. O juízo aceita a apólice como garantia, liberando o capital que ficaria bloqueado." },
-      { q: "Empresa em recuperação judicial consegue emitir?", a: "É um alerta crítico: a maioria das seguradoras não emite para tomadores em RJ. Exige análise." },
-    ],
-    estruturadas: [
-      { q: "Por que é considerada estruturada?", a: "Envolve análise sob medida do projeto, do fluxo financeiro e das garantias do tomador." },
-      { q: "Quais documentos são exigidos?", a: "Contrato/edital, demonstrações financeiras e detalhamento do projeto ou da operação." },
-    ],
-    financeiras: [
-      { q: "Como a seguradora avalia o risco?", a: "Analisa a estrutura da operação, os covenants e a capacidade financeira do tomador." },
-      { q: "Qual o prazo típico da apólice?", a: "Acompanha o prazo da operação financeira garantida, com renovações quando aplicável." },
-    ],
-  };
-  return [...base, ...porGrupo[m.grupo]];
 }
